@@ -2,8 +2,7 @@ import pytest
 
 from pkgcore.ebuild import atom, cpv
 from pkgcore.pkgsets import glsa
-from pkgcore.restrictions.packages import OrRestriction
-from pkgcore.restrictions.restriction import AlwaysBool
+from pkgcore.restrictions.packages import AlwaysFalse, OrRestriction
 from pkgcore.test.misc import mk_glsa
 
 pkgs_set = (
@@ -44,7 +43,7 @@ class TestGlsaDirSet:
         self.mk_glsa(tmp_path, [("dev-util/diffball", ([], [vuln_range]))])
         restrict = list(OrRestriction(*tuple(glsa.GlsaDirSet(str(tmp_path)))))
         if len(restrict) == 0:  # exception thrown
-            restrict.append(AlwaysBool(negate=False))
+            restrict.append(AlwaysFalse)
         assert len(restrict) == 1
         restrict = restrict[0]
         for ver in ver_matches:
