@@ -275,8 +275,8 @@ class TestEqualityMatch(TestRestriction):
             ("asdf", "fdsa", False),
             (1, 1, True),
             (1, 2, False),
-            (list(range(2)), list(range(2)), True),
-            (list(range(2)), reversed(list(range(2))), False),
+            (tuple(range(2)), tuple(range(2)), True),
+            (tuple(range(2)), tuple(reversed(range(2))), False),
             (True, True, True),
             (True, False, False),
             (False, True, False),
@@ -310,10 +310,10 @@ class TestContainmentMatch(TestRestriction):
 
     def test_match(self):
         for x, y, ret in (
-            (list(range(10)), list(range(10)), True),
-            (list(range(10)), [], False),
-            (list(range(10)), set(range(10)), True),
-            (set(range(10)), list(range(10)), True),
+            (tuple(range(10)), tuple(range(10)), True),
+            (tuple(range(10)), [], False),
+            (tuple(range(10)), set(range(10)), True),
+            (set(range(10)), tuple(range(10)), True),
         ):
             for negated in (False, True):
                 self.assertMatches(
@@ -328,14 +328,14 @@ class TestContainmentMatch(TestRestriction):
             # an extra data set for testing.
             self.assertMatches(
                 self.kls(range(10), match_all=True, negate=negated),
-                list(range(20)),
-                [list(range(10))] * 3,
+                tuple(range(20)),
+                [tuple(range(10))] * 3,
                 negated=negated,
             )
             self.assertNotMatches(
                 self.kls(range(10), match_all=True, negate=negated),
-                list(range(5)),
-                [list(range(5))] * 3,
+                tuple(range(5)),
+                [tuple(range(5))] * 3,
                 negated=negated,
             )
 
@@ -398,5 +398,5 @@ class TestAnyMatch:
 
     def test_force(self):
         restrict = values.AnyMatch(values.AlwaysTrue)
-        assert restrict.force_True(None, None, list(range(2)))
-        assert not restrict.force_False(None, None, list(range(2)))
+        assert restrict.force_True(None, None, tuple(range(2)))
+        assert not restrict.force_False(None, None, tuple(range(2)))
