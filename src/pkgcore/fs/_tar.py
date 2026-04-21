@@ -5,12 +5,15 @@ This is a version of tarfile modified strictly for snakeoil.data_sources usage.
 This is will be removed once pkgcore and snakeoil data_source usage is removed.
 """
 
-from snakeoil.python_namespaces import protect_imports
+import importlib.util
 
-# force a fresh module import of tarfile that is ours to monkey patch.
-with protect_imports() as (_paths, modules):
-    modules.pop("tarfile", None)
-    tarfile = __import__("tarfile")
+# force a fresh module import of tarfile that is ours to monkey patch, bypassing sys.modules
+#  reuse.
+if (spec := importlib.util.find_spec("tarfile")) is None:
+    raise ImportError("python bundled tarfile module could not be found for importing")
+tarfile = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(tarfile)
+del spec
 
 
 # add in a tweaked ExFileObject that is usable by snakeoil.data_source
