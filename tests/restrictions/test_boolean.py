@@ -67,23 +67,6 @@ class base:
     # TODO total_len? what does it do?
 
 
-class TestBase(base):
-    kls = boolean.base
-
-    def test_base(self):
-        base = self.kls(true, false, node_type="foo")
-        assert len(base) == 2
-        assert list(base) == [true, false]
-        with pytest.raises(NotImplementedError):
-            base.match(false)
-        # TODO is the signature for these correct?
-        with pytest.raises(NotImplementedError):
-            base.force_False(false)
-        with pytest.raises(NotImplementedError):
-            base.force_True(false)
-        assert base[1] is false
-
-
 # TODO these tests are way too limited
 class TestAndRestriction(base):
     kls = boolean.AndRestriction

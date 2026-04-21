@@ -6,10 +6,13 @@ attr from a package instance and hand it to their wrapped restriction
 (which is a value restriction).
 """
 
+import abc
 import re
+import typing
+from inspect import isabstract
 from typing import Any
 
-from snakeoil.klass import generic_equality, reflective_hash
+from snakeoil import klass
 from snakeoil.sequences import iflatten_instance
 
 from pkgcore._internal import deprecated
@@ -33,16 +36,6 @@ class base(restriction.base):
 
     def force_False(self, pkg, attr, val):
         return not self.match(val)
-
-
-def hashed_base(name, bases, scope):
-    scope.setdefault("__hash__", reflective_hash("_hash"))
-    slots = scope.get("__slots__", None)
-    if slots is not None:
-        if "_hash" not in slots:
-            slots = scope["__slots__"] = slots + ("_hash",)
-        scope.setdefault("__attr_comparison__", slots)
-    return generic_equality(name, bases, scope)
 
 
 class GetAttrRestriction(packages.PackageRestriction):
@@ -77,11 +70,31 @@ class VersionRestriction(base):
     __slots__ = ()
 
 
-class StrRegex(base, metaclass=hashed_base):
+# TODO: move this into GenericEquality
+class _HashedGenericEquality(klass.GenericEquality, abc.ABC):
+    __slots__ = ("_hash",)
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        if not isabstract(cls):
+            # inject _hash as the first- if the instance has been hashed,
+            # a straight int comparison is faster.
+            cls.__attr_comparison__ = ("_hash",) + tuple(
+                x for x in cls.__attr_comparison__ if x != "_hash"
+            )
+        super().__init_subclass__(**kwargs)
+
+    @klass.cached_hash
+    def __hash__(self) -> int:
+        return hash(
+            tuple(getattr(self, x) for x in self.__attr_comparison__ if x != "_hash")
+        )
+
+
+class StrRegex(_HashedGenericEquality, base):
     """regex based matching"""
 
-    __slots__ = ("_hash", "flags", "regex", "_matchfunc", "ismatch", "negate")
-    __inst_caching__ = True
+    ___slots__ = ("flags", "regex", "_matchfunc", "ismatch", "negate")
+    __attr_comparison__ = ("regex", "negate", "flags", "ismatch")
 
     def __init__(self, regex, case_sensitive=True, match=False, negate=False):
         """
@@ -100,7 +113,6 @@ class StrRegex(base, metaclass=hashed_base):
             )
         except re.error as e:
             raise ValueError(f"invalid regex: {regex!r}, {e}")
-        self._hash = hash((self.regex, self.negate, self.flags, self.ismatch))
 
     def match(self, value):
         if not isinstance(value, str):
@@ -134,11 +146,10 @@ class StrRegex(base, metaclass=hashed_base):
         return result
 
 
-class StrExactMatch(base, metaclass=generic_equality):
+class StrExactMatch(_HashedGenericEquality, base):
     """exact string comparison match"""
 
-    __slots__ = __attr_comparison__ = ("_hash", "exact", "case_sensitive", "negate")
-    __inst_caching__ = True
+    __slots__ = __attr_comparison__ = ("exact", "case_sensitive", "negate")
 
     def __init__(self, exact: str, case_sensitive=True, negate=False):
         """
@@ -151,7 +162,6 @@ class StrExactMatch(base, metaclass=generic_equality):
         if not case_sensitive:
             exact = exact.lower()
         self.exact = exact
-        self._hash = hash((self.exact, self.negate, self.case_sensitive))
 
     def match(self, value):
         value = str(value)
@@ -184,14 +194,11 @@ class StrExactMatch(base, metaclass=generic_equality):
             return f"!= {self.exact}"
         return f"== {self.exact}"
 
-    __hash__ = reflective_hash("_hash")
 
-
-class StrGlobMatch(base, metaclass=hashed_base):
+class StrGlobMatch(_HashedGenericEquality, base):
     """globbing matches; essentially startswith and endswith matches"""
 
-    __slots__ = ("_hash", "glob", "prefix", "negate", "flags")
-    __inst_caching__ = True
+    __slots__ = __attr_comparison__ = ("glob", "prefix", "negate", "flags")
 
     def __init__(self, glob, case_sensitive=True, prefix=True, negate=False):
         """
@@ -209,7 +216,6 @@ class StrGlobMatch(base, metaclass=hashed_base):
         else:
             self.flags, self.glob = 0, glob
         self.prefix = prefix
-        self._hash = hash((self.glob, self.negate, self.flags, self.prefix))
 
     def match(self, value):
         value = str(value)
@@ -246,9 +252,8 @@ class StrGlobMatch(base, metaclass=hashed_base):
         return "{s}*{self.glob}"
 
 
-class EqualityMatch(base, metaclass=generic_equality):
+class EqualityMatch(base):
     __slots__ = ("negate", "data")
-    __attr_comparison__ = __slots__
 
     def __init__(self, data: Any, negate=False):
         """
@@ -272,15 +277,14 @@ class EqualityMatch(base, metaclass=generic_equality):
         return f"EqualityMatch: ={self.data}"
 
 
-class ContainmentMatch(base, metaclass=hashed_base):
+class ContainmentMatch(_HashedGenericEquality, base):
     """Used for an 'in' style operation.
 
     For example, 'x86' in ['x86', '~x86']. Note that negation of this *does*
     not result in a true NAND when all is on.
     """
 
-    __slots__ = ("_hash", "vals", "all", "negate")
-    __inst_caching__ = True
+    __slots__ = __attr_comparison__ = ("vals", "all", "negate")
 
     def __init__(self, vals, match_all=False, negate=False):
         """
@@ -490,7 +494,7 @@ ContainmentMatch2 = deprecated("use ContainmentMatch instead", removal_in=(0, 12
 )
 
 
-class FlatteningRestriction(base, metaclass=generic_equality):
+class FlatteningRestriction(klass.GenericEquality, base):
     """Flatten the values passed in and apply the nested restriction."""
 
     __slots__ = __attr_comparison__ = ("dont_iter", "restriction", "negate")
@@ -530,10 +534,12 @@ class FlatteningRestriction(base, metaclass=generic_equality):
         )
 
 
-class FunctionRestriction(base, metaclass=generic_equality):
+class FunctionRestriction(klass.GenericEquality, base):
     """Convenience class for creating special restrictions."""
 
     __attr_comparison__ = __slots__ = ("func", "negate")
+    # TODO: figure out a correct way to say "hashable, but the hash is the id".
+    # Type checker is pissy about just using a raw id()
     __hash__ = object.__hash__
 
     def __init__(self, func, negate=False):
@@ -559,7 +565,7 @@ class FunctionRestriction(base, metaclass=generic_equality):
         )
 
 
-class StrConversion(base, metaclass=generic_equality):
+class StrConversion(klass.GenericEquality):
     """convert passed in data to a str object"""
 
     __hash__ = object.__hash__

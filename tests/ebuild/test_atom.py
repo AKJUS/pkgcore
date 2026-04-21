@@ -30,11 +30,7 @@ def assert_not_equal_bidirectional(o1, o2):
 
 
 class TestAtom(TestRestriction):
-    class kls(atom.atom):
-        __inst_caching__ = True
-        __slots__ = ()
-
-    kls = staticmethod(kls)
+    kls = atom.atom
 
     def test_removed_features(self):
         # Ensure multi-slots no longer are allowed.

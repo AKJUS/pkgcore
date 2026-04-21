@@ -6,13 +6,14 @@ from operator import attrgetter
 
 from snakeoil import klass
 from snakeoil.compatibility import IGNORED_EXCEPTIONS
-from snakeoil.klass import generic_equality
+
+from pkgcore._internal import deprecated
 
 from ..log import logger
 from . import boolean, restriction
 
 
-class PackageRestriction(restriction.base, metaclass=generic_equality):
+class PackageRestriction(klass.GenericEquality, restriction.base):
     """Package data restriction."""
 
     __slots__ = (
@@ -23,7 +24,6 @@ class PackageRestriction(restriction.base, metaclass=generic_equality):
         "negate",
     )
     __attr_comparison__ = ("__class__", "negate", "_attr_split", "restriction")
-    __inst_caching__ = True
 
     type = restriction.package_type
     subtype = restriction.value_type
@@ -148,7 +148,7 @@ class PackageRestriction(restriction.base, metaclass=generic_equality):
 
 class PackageRestrictionMulti(PackageRestriction):
     __slots__ = ()
-    __inst_caching__ = True
+    # TODO: figure out the point of this classvar and then type and document it.
     attr = None
 
     def force_False(self, pkg):
@@ -192,7 +192,13 @@ class PackageRestrictionMulti(PackageRestriction):
     __eq__ = PackageRestriction.__eq__
 
 
-class Conditional(PackageRestriction, metaclass=generic_equality):
+deprecated.code_directive(
+    "remove Conditional tolerate_unhashable_args- pkgcheck will have been updated",
+    removal_in=(0, 12, 0),
+)
+
+
+class Conditional(PackageRestriction, tolerate_uncachable_args=True):
     """Base object representing a conditional package restriction.
 
     Used to control whether a payload of restrictions are accessible or not.

@@ -16,7 +16,7 @@ __all__ = (
     "VersionMatch",
 )
 
-from snakeoil.klass import generic_equality
+from snakeoil.klass import GenericEquality
 
 from ..restrictions import packages, restriction, values
 from . import cpv, errors
@@ -24,7 +24,7 @@ from . import cpv, errors
 
 # TODO: change values.EqualityMatch so it supports le, lt, gt, ge, eq,
 # ne ops, and convert this to it.
-class _VersionMatch(restriction.base, metaclass=generic_equality):
+class _VersionMatch(GenericEquality, restriction.base):
     """
     package restriction implementing gentoo ebuild version comparison rules
 
@@ -49,7 +49,10 @@ class _VersionMatch(restriction.base, metaclass=generic_equality):
 
     _convert_str2op = {v: k for k, v in _convert_op2str.items()}
 
-    def __init__(self, operator, ver, rev=None, negate=False, **kwd):
+    # FIXME: remove the kwd since it is ignored.
+    def __init__(
+        self, operator: str, ver: str, rev: None | str = None, negate=False, **kwd
+    ):
         """
         :param operator: version comparison to do,
             valid operators are ('<', '<=', '=', '>=', '>', '~')
@@ -122,7 +125,7 @@ class _VersionMatch(restriction.base, metaclass=generic_equality):
             return tuple(sorted(set((-1, 0, 1)).difference(inst.vals)))
         return inst.vals
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if self is other:
             return True
         if isinstance(other, self.__class__):
@@ -136,13 +139,13 @@ class _VersionMatch(restriction.base, metaclass=generic_equality):
 
         return False
 
+    # TODO: cached_hash?
     def __hash__(self):
         return hash((self.droprev, self.ver, self.rev, self.negate, self.vals))
 
 
 class VersionMatch(packages.PackageRestriction):
     __slots__ = ()
-    __inst_caching__ = True
 
     def __init__(self, *args, **kwds):
         v = _VersionMatch(*args, **kwds)
@@ -154,7 +157,6 @@ class VersionMatch(packages.PackageRestriction):
 
 class SlotDep(packages.PackageRestriction):
     __slots__ = ()
-    __inst_caching__ = True
 
     def __init__(self, slot, **kwds):
         v = values.StrExactMatch(slot)
@@ -163,7 +165,6 @@ class SlotDep(packages.PackageRestriction):
 
 class SubSlotDep(packages.PackageRestriction):
     __slots__ = ()
-    __inst_caching__ = True
 
     def __init__(self, subslot, **kwds):
         v = values.StrExactMatch(subslot)
@@ -172,7 +173,6 @@ class SubSlotDep(packages.PackageRestriction):
 
 class CategoryDep(packages.PackageRestriction):
     __slots__ = ()
-    __inst_caching__ = True
 
     def __init__(self, category, negate=False):
         super().__init__("category", values.StrExactMatch(category, negate=negate))
@@ -180,7 +180,6 @@ class CategoryDep(packages.PackageRestriction):
 
 class PackageDep(packages.PackageRestriction):
     __slots__ = ()
-    __inst_caching__ = True
 
     def __init__(self, package, negate=False):
         super().__init__("package", values.StrExactMatch(package, negate=negate))
@@ -188,7 +187,6 @@ class PackageDep(packages.PackageRestriction):
 
 class RepositoryDep(packages.PackageRestriction):
     __slots__ = ()
-    __inst_caching__ = True
 
     def __init__(self, repo_id, negate=False):
         super().__init__("repo.repo_id", values.StrExactMatch(repo_id), negate=negate)
@@ -196,7 +194,6 @@ class RepositoryDep(packages.PackageRestriction):
 
 class StaticUseDep(packages.PackageRestriction):
     __slots__ = ()
-    __inst_caching__ = True
 
     def __init__(self, false_use, true_use):
         v = []
@@ -216,7 +213,9 @@ class StaticUseDep(packages.PackageRestriction):
         super().__init__("use", v)
 
 
-class _UseDepDefaultContainment(values.ContainmentMatch):
+# TODO: on a guess, this is not cached due to the potential values not being immutable.
+# Which makes no sense; trace and fix.
+class _UseDepDefaultContainment(values.ContainmentMatch, caching=False):
     __slots__ = ("if_missing",)
 
     def __init__(self, if_missing: bool, vals, negate=False):
@@ -278,7 +277,6 @@ class _UseDepDefaultContainment(values.ContainmentMatch):
 
 class UseDepDefault(packages.PackageRestrictionMulti):
     __slots__ = ()
-    __inst_caching__ = True
 
     def __init__(self, if_missing, false_use, true_use):
         v = []

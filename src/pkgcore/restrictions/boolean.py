@@ -7,18 +7,25 @@ operations.
 
 __all__ = ("AndRestriction", "OrRestriction")
 
+import abc
+import typing
 from itertools import islice
 
-from snakeoil.klass import cached_hash, generic_equality, immutable
+from snakeoil.klass import GenericEquality, cached_hash, immutable
 
 from . import restriction
 
 
-class base(restriction.base, metaclass=generic_equality):
+class base(GenericEquality, restriction.base):
     """base template for boolean restrictions"""
 
     __attr_comparison__ = ("negate", "type", "restrictions")
     __slots__ = ("restrictions", "type", "negate", "_hash")
+
+    type: restriction.T_restriction
+    negate: bool
+    # TODO: lock this down to tuple, via changing the 'finalize' usage into something akin to .build() chains.
+    restrictions: typing.Sequence[restriction.base]
 
     _evaluate_collapsible = False
     _evaluate_wipe_empty = True
@@ -96,7 +103,7 @@ class base(restriction.base, metaclass=generic_equality):
             restrictions must be of that type.
         """
         if not new_restrictions:
-            raise TypeError("need at least one restriction handed in")
+            raise TypeError("need at least one restriction passed")
         if self.type is not None:
             try:
                 for r in new_restrictions:
@@ -131,21 +138,29 @@ class base(restriction.base, metaclass=generic_equality):
             id(self),
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.restrictions)
 
     def __iter__(self):
         return iter(self.restrictions)
 
-    def match(self, action, *vals):
-        raise NotImplementedError
+    @abc.abstractmethod
+    def match(self, vals) -> bool: ...
 
-    force_False, force_True = match, match
+    # TODO FIXME: this doesn't actually try to find a solution.  remove the abstract
+    # and require children to implement this.  This strictly is a default for
+    # reasons of refactoring the code.
+    def force_True(self, pkg, *vals) -> bool:
+        return self.match(pkg)
 
-    def dnf_solutions(self, full_solution_expansion=False):
-        raise NotImplementedError()
+    def force_False(self, pkg, *vals) -> bool:
+        return not self.match(pkg)
 
-    cnf_solutions = dnf_solutions
+    def cnf_solutions(self, full_solution_expansion=False) -> typing.Sequence:
+        return [[self]]
+
+    def dnf_solutions(self, full_solution_expansion=False) -> typing.Sequence:
+        return [[self]]
 
     def iter_cnf_solutions(self, *a, **kwds):
         """iterate over the cnf solution"""
@@ -362,7 +377,8 @@ class AndRestriction(base):
             #                 "AndRestriction isn't implemented yet")
             # hack- this is an experiment
             for r in OrRestriction(
-                node_type=self.type, *[restriction.Negate(x) for x in self.restrictions]
+                node_type=self.type,
+                *[restriction.Negate(x) for x in self.restrictions],
             ).iter_dnf_solutions():
                 yield r
             return
@@ -505,7 +521,8 @@ class OrRestriction(base):
         if self.negate:
             # hack- this is an experiment
             for x in AndRestriction(
-                node_type=self.type, *[restriction.Negate(x) for x in self.restrictions]
+                node_type=self.type,
+                *[restriction.Negate(x) for x in self.restrictions],
             ).iter_dnf_solutions():
                 yield x
         if not self.restrictions:
@@ -600,6 +617,13 @@ class OrRestriction(base):
 class JustOneRestriction(base):
     """Exactly one must match, or there must be no restrictions"""
 
+    # TODO FIXME: this is a critical depset component for resolution,
+    # and the cnf/dnf logic- along with force_{True,False} needs to be implemented.
+    #
+    # ... that said, this particular operand *is* combinatorial in possibilities.
+    # It's not simple; fix it, but do so after revisiting the general cnf/dnf and force_*
+    # api approach since the resolver is left blind as to what it should play with- instead
+    # it just brute forces everything.
     __slots__ = ()
 
     _evaluate_collapsable = True
@@ -643,6 +667,20 @@ class AtMostOneOfRestriction(base):
                 return self.negate
             armed = True
         return not self.negate
+
+    # TODO FIXME: this doesn't actually try to find a solution.
+    # it must for the resolver to function properly for this sort of depset.
+    def force_True(self, pkg, *vals) -> bool:
+        return self.match(pkg)
+
+    def force_False(self, pkg, *vals) -> bool:
+        return not self.match(pkg)
+
+    def cnf_solutions(self, full_solution_expansion=False) -> typing.Sequence:
+        return [[self]]
+
+    def dnf_solutions(self, full_solution_expansion=False) -> typing.Sequence:
+        return [[self]]
 
     def __str__(self):
         restricts_str = " ".join(map(str, self.restrictions))

@@ -35,7 +35,7 @@ valid_slot_chars = frozenset(valid_slot_chars)
 valid_ops = frozenset(["<", "<=", "=", "~", ">=", ">"])
 
 
-class atom(boolean.AndRestriction, metaclass=klass.generic_equality):
+class atom(boolean.AndRestriction):
     """Currently implements gentoo ebuild atom parsing.
 
     Should be converted into an agnostic dependency base.
@@ -79,7 +79,6 @@ class atom(boolean.AndRestriction, metaclass=klass.generic_equality):
     # hack; combine these 2 metaclasses at some point...
     locals().pop("__eq__", None)
     locals().pop("__ne__", None)
-    __inst_caching__ = True
 
     # overrided in child class if it's supported
     evaluate_depset = None
@@ -685,7 +684,6 @@ class atom(boolean.AndRestriction, metaclass=klass.generic_equality):
 
 class transitive_use_atom(atom):
     __slots__ = ()
-    __inst_caching__ = True
     _nontransitive_use_atom = atom
 
     is_simple = False  # type: ignore

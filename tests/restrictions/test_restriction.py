@@ -7,7 +7,7 @@ from pkgcore.restrictions import restriction
 from .utils import TestRestriction
 
 
-class SillyBool(restriction.base):
+class SillyBool(restriction.base, caching=False):
     """Extra stupid version of AlwaysBool to test base.force_{True,False}."""
 
     __slots__ = ("negate",)
@@ -23,14 +23,14 @@ class TestBase(TestRestriction):
     bool_kls = SillyBool
 
     def test_base(self):
-        base = restriction.base()
+        with pytest.raises(TypeError):
+            restriction.base()  # type: ignore
+        base = self.bool_kls()
         assert len(base) == 1
         # Just check repr and str do not raise
         assert str(base)
         assert repr(base)
         assert hash(base)
-        with pytest.raises(NotImplementedError):
-            base.match()
 
     def test_it(self):
         true = self.bool_kls(negate=False)

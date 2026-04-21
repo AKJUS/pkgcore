@@ -17,15 +17,16 @@ from .atom import atom, transitive_use_atom
 from .errors import DepsetParseError
 
 
-class DepSet(boolean.AndRestriction):
+# TODO: enable caching for DepSet rendering.  It's been disabled for a long while, but
+# in tracing this- it looks like that's a hold over from when the code self-mutated.  It
+# returns new immutable instances of itself (specifically via moving parsing into classmethod .parse).
+# I'd expect this to be significant for pkgcheck runtime.
+class DepSet(boolean.AndRestriction, caching=False):
     """Gentoo DepSet syntax parser"""
 
     __slots__ = ("element_class", "_node_conds", "_known_conditionals")
 
     _evaluate_collapse = True
-
-    # do not enable instance caching w/out adjust evaluate_depset!
-    __inst_caching__ = False
 
     def __init__(
         self,

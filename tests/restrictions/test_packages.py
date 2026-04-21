@@ -9,6 +9,9 @@ from .utils import TestRestriction
 
 
 class AlwaysSelfIntersect(values.base):
+    def match(self, *other):
+        return False
+
     def intersect(self, other):
         return self
 
@@ -16,15 +19,7 @@ class AlwaysSelfIntersect(values.base):
 
 
 class TestPackageRestriction(TestRestriction):
-    if packages.PackageRestriction is packages.PackageRestriction:
-        kls = packages.PackageRestriction
-    else:
-
-        class kls(packages.PackageRestriction, packages.PackageRestriction_mixin):
-            __slots__ = ()
-            __inst_caching__ = packages.PackageRestriction.__inst_caching__
-
-    kls = staticmethod(kls)
+    kls = packages.PackageRestriction
 
     def test_matching(self, caplog):
         strexact = values.StrExactMatch
@@ -117,17 +112,7 @@ class values_callback(values.base):
 
 
 class TestPackageRestrictionMulti:
-    if packages.PackageRestriction is packages.PackageRestriction:
-        kls = packages.PackageRestrictionMulti
-    else:
-
-        class kls(
-            packages.PackageRestrictionMulti, packages.PackageRestrictionMulti_mixin
-        ):
-            __slots__ = ()
-            __inst_caching__ = packages.PackageRestrictionMulti.__inst_caching__
-
-    kls = staticmethod(kls)
+    kls = packages.PackageRestrictionMulti
 
     def test_attr(self):
         o = self.kls(("asdf.far", "repo"), values.AlwaysTrue)

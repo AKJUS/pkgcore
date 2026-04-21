@@ -9,7 +9,7 @@ __all__ = ("delegate",)
 from . import restriction
 
 
-class delegate(restriction.base):
+class delegate(restriction.base, caching=False):
     """hand off matching to a handed in prototype
 
     Example usage of this class should be available in
@@ -19,7 +19,6 @@ class delegate(restriction.base):
     __slots__ = ("_transform", "negate")
 
     type = restriction.package_type
-    inst_caching = False
 
     def __init__(self, transform_func, negate=False):
         """

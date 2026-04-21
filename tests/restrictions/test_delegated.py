@@ -61,4 +61,7 @@ class Test_delegate(TestRestriction):
                 )
 
     def test_caching(self):
-        assert not self.kls.inst_caching
+        def f(*args):
+            return False
+
+        assert self.kls(f) is not self.kls(f)

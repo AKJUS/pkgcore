@@ -113,7 +113,6 @@ class TestStrExactMatch(TestRestriction):
 
         class kls(values.StrExactMatch, values.base):
             __slots__ = ()
-            __inst_caching__ = True
 
             intersect = values._StrExact_intersect
             __repr__ = values._StrExact__repr__
