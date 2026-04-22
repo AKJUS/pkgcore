@@ -12,6 +12,8 @@ from typing import Any
 from snakeoil.klass import generic_equality, reflective_hash
 from snakeoil.sequences import iflatten_instance
 
+from pkgcore._internal import deprecated
+
 from . import boolean, packages, restriction
 
 
@@ -483,10 +485,9 @@ class ContainmentMatch(base, metaclass=hashed_base):
         return f"{negate}{restricts_str}"
 
 
-# ContainmentMatch2 was added in f1d3c6f to deprecate ContainmentMatch;
-# cleanup took a while (2021).  This ContainmentMatch2 can be removed
-# by 2023 at latest (pkgcheck is the only known dependency on this).
-ContainmentMatch2 = ContainmentMatch
+ContainmentMatch2 = deprecated("use ContainmentMatch instead", removal_in=(0, 12, 0))(
+    ContainmentMatch
+)
 
 
 class FlatteningRestriction(base, metaclass=generic_equality):
