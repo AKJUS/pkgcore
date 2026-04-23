@@ -70,7 +70,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install ".[test]" pytest-github-actions-annotate-failures
+        pip install --upgrade ".[test]" pytest-github-actions-annotate-failures
 
     - name: Test with pytest
       env:
@@ -131,8 +131,8 @@ jobs:
     - name: Install pip dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install "./pkgcore"
-        pip install "./${{ matrix.repo }}[test]"
+        pip install --upgrade "./pkgcore"
+        pip install --upgrade "./${{ matrix.repo }}[test]"
 
     - name: Test with pytest
       working-directory: ./${{ matrix.repo }}
@@ -186,7 +186,7 @@ jobs:
       run: getuto && FEATURES="-pid-sandbox -ipc-sandbox -network-sandbox" emerge -j2 -g1 dev-python/pip
 
     - name: Install pkgcore
-      run: pip install --break-system-packages "./pkgcore"
+      run: pip install --upgrade --break-system-packages "./pkgcore"
 
     - name: Run pmaint regen
       working-directory: ./gentoo
