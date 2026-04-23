@@ -33,7 +33,7 @@ classifiers = [
 dynamic = ["version"]
 
 dependencies = [
-	"snakeoil~=0.11.0",
+	"snakeoil@git+https://github.com/pkgcore/snakeoil.git#master",
 	"lxml",
 ]
 
