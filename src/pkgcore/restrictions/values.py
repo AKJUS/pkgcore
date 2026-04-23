@@ -8,7 +8,6 @@ attr from a package instance and hand it to their wrapped restriction
 
 import abc
 import re
-import typing
 from inspect import isabstract
 from typing import Any
 
