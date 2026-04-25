@@ -13,10 +13,11 @@ from itertools import chain
 from os.path import abspath
 from os.path import join as pjoin
 
-from snakeoil import caching, klass
+from snakeoil import klass
 from snakeoil.bash import read_bash, read_bash_dict
 from snakeoil.data_source import local_source
 from snakeoil.fileutils import readlines_utf8
+from snakeoil.klass import memoize
 from snakeoil.mappings import ImmutableDict
 from snakeoil.sequences import split_negations, stable_unique
 
@@ -177,8 +178,8 @@ _make_incrementals_dict = partial(misc.IncrementalsDict, INCREMENTALS)
 _Packages = namedtuple("_Packages", ("system", "profile"))
 
 
-class ProfileNode(metaclass=caching.WeakInstMeta):
-    __inst_caching__ = True
+# Revisit enabling children caching, but this is the way's it's been, so maintain it.
+class ProfileNode(memoize.WeaklyCached, caching=True, child_caching_default=False):
     _repo_map = None
 
     def __init__(self, path, pms_strict=True):
@@ -619,9 +620,7 @@ class ProfileNode(metaclass=caching.WeakInstMeta):
         return profile
 
 
-class EmptyRootNode(ProfileNode):
-    __inst_caching__ = True
-
+class EmptyRootNode(ProfileNode, caching=True):
     parents = ()
     deprecated = None
     pkg_use = masked_use = stable_masked_use = forced_use = stable_forced_use = (
