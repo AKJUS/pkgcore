@@ -743,7 +743,7 @@ class domain(config_domain):
 
         # forcibly create repo_config object, otherwise cached version might be used
         try:
-            repo_config = RepoConfig(path, disable_inst_caching=True)
+            repo_config = RepoConfig(path)
         except OSError as e:
             raise repo_errors.InvalidRepo(str(e))
 

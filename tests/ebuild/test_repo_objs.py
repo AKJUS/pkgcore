@@ -530,33 +530,28 @@ class TestRepoConfig:
         assert repo_config.is_empty
         assert caplog.text == ""
         caplog.clear()
-        del repo_config
 
         # empty repo
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.is_empty
         assert "repo is empty:" in caplog.text
         caplog.clear()
-        del repo_config
 
         # profiles dir exists
         os.mkdir(self.profiles_base)
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert not repo_config.is_empty
-        del repo_config
 
     def test_repo_name(self, caplog):
         # nonexistent file
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.repo_name is None
-        del repo_config
 
         # empty file
         os.mkdir(os.path.dirname(self.metadata_path))
         touch(self.metadata_path)
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.repo_name is None
-        del repo_config
 
         # bad data formatting
         with open(self.metadata_path, "w") as f:
@@ -565,7 +560,6 @@ class TestRepoConfig:
         assert repo_config.repo_name is None
         assert "bash parse error" in caplog.text
         caplog.clear()
-        del repo_config
 
         # bad data formatting + name
         with open(self.metadata_path, "w") as f:
@@ -574,35 +568,30 @@ class TestRepoConfig:
         assert repo_config.repo_name == "repo0"
         assert "bash parse error" in caplog.text
         caplog.clear()
-        del repo_config
 
         # unset
         with open(self.metadata_path, "w") as f:
             f.write("repo-name =")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.repo_name == ""
-        del repo_config
 
         # whitespace
         with open(self.metadata_path, "w") as f:
             f.write("repo-name =  \n")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.repo_name == ""
-        del repo_config
 
         # whitespace + name
         with open(self.metadata_path, "w") as f:
             f.write("repo-name = repo \n")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.repo_name == "repo"
-        del repo_config
 
         # regular name
         with open(self.metadata_path, "w") as f:
             f.write("repo-name = repo1")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.repo_name == "repo1"
-        del repo_config
 
     def test_manifests(self):
         # nonexistent file
@@ -615,7 +604,6 @@ class TestRepoConfig:
             "hashes": repo_objs.RepoConfig.default_hashes,
             "required_hashes": repo_objs.RepoConfig.default_required_hashes,
         }
-        del repo_config
 
         # regular data
         os.mkdir(os.path.dirname(self.metadata_path))
@@ -625,7 +613,6 @@ class TestRepoConfig:
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.manifests.hashes == ("size", "foo")
         assert repo_config.manifests.required_hashes == ("size", "bar")
-        del repo_config
 
     def test_masters(self, caplog):
         # empty repo
@@ -633,7 +620,6 @@ class TestRepoConfig:
         assert repo_config.masters == ()
         assert caplog.text == ""
         caplog.clear()
-        del repo_config
 
         # nonempty repo
         os.mkdir(self.profiles_base)
@@ -641,7 +627,6 @@ class TestRepoConfig:
         assert repo_config.masters == ()
         assert "doesn't specify masters in metadata" in caplog.text
         caplog.clear()
-        del repo_config
 
         # explicit empty masters for standalone repo
         os.mkdir(os.path.dirname(self.metadata_path))
@@ -651,27 +636,23 @@ class TestRepoConfig:
         assert repo_config.masters == ()
         assert caplog.text == ""
         caplog.clear()
-        del repo_config
 
         # overlay repo with masters
         with open(self.metadata_path, "w") as f:
             f.write("masters = foo bar\n")
         repo_config = repo_objs.RepoConfig(self.repo_path, config_name="a")
         assert repo_config.masters == ("foo", "bar")
-        del repo_config
 
         # overlay repo with duplicate masters
         with open(self.metadata_path, "w") as f:
             f.write("masters = foo bar foo baz\n")
         repo_config = repo_objs.RepoConfig(self.repo_path, config_name="b")
         assert repo_config.masters == ("foo", "bar", "baz")
-        del repo_config
 
     def test_cache_format(self, caplog):
         # empty repo
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.cache_format == "md5-dict"
-        del repo_config
 
         # explicit empty setting
         os.mkdir(os.path.dirname(self.metadata_path))
@@ -679,7 +660,6 @@ class TestRepoConfig:
             f.write("cache-formats =\n")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.cache_format is None
-        del repo_config
 
         # unknown formats
         with open(self.metadata_path, "w") as f:
@@ -688,28 +668,24 @@ class TestRepoConfig:
         assert repo_config.cache_format == "md5-dict"
         assert "unknown cache format:" in caplog.text
         caplog.clear()
-        del repo_config
 
         # known format
         with open(self.metadata_path, "w") as f:
             f.write("cache-formats = pms\n")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.cache_format == "pms"
-        del repo_config
 
         # multiple formats -- favored format is selected
         with open(self.metadata_path, "w") as f:
             f.write("cache-formats = pms md5-dict\n")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.cache_format == "md5-dict"
-        del repo_config
 
         # unknown + known
         with open(self.metadata_path, "w") as f:
             f.write("cache-formats = foo md5-dict\n")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.cache_format == "md5-dict"
-        del repo_config
 
     def test_profile_formats(self, caplog):
         os.mkdir(self.profiles_base)
@@ -719,7 +695,6 @@ class TestRepoConfig:
         # empty repo
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.profile_formats == {"pms"}
-        del repo_config
         caplog.clear()
 
         # explicit empty setting
@@ -730,13 +705,12 @@ class TestRepoConfig:
         assert repo_config.profile_formats == {"pms"}
         assert not caplog.text
         caplog.clear()
-        del repo_config
+
         # message shown at info log level
         caplog.set_level(logging.INFO)
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert "has explicitly unset profile-formats" in caplog.text
         caplog.clear()
-        del repo_config
 
         # unknown formats
         caplog.set_level(logging.WARNING)
@@ -746,13 +720,12 @@ class TestRepoConfig:
         assert repo_config.profile_formats == {"pms"}
         assert not caplog.text
         caplog.clear()
-        del repo_config
+
         # message shown at info log level
         caplog.set_level(logging.INFO)
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert "has unsupported profile format" in caplog.text
         caplog.clear()
-        del repo_config
 
         # unknown + known
         caplog.set_level(logging.WARNING)
@@ -762,13 +735,12 @@ class TestRepoConfig:
         assert repo_config.profile_formats == {"pms", "portage-2"}
         assert not caplog.text
         caplog.clear()
-        del repo_config
+
         # message shown at info log level
         caplog.set_level(logging.INFO)
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert "has unsupported profile format" in caplog.text
         caplog.clear()
-        del repo_config
 
         # known formats
         caplog.set_level(logging.WARNING)
@@ -776,7 +748,6 @@ class TestRepoConfig:
             f.write("profile-formats = portage-1 portage-2\n")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.profile_formats == {"portage-1", "portage-2"}
-        del repo_config
 
     def test_pms_repo_name(self):
         os.mkdir(self.profiles_base)
@@ -785,68 +756,58 @@ class TestRepoConfig:
         # nonexistent file
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.pms_repo_name is None
-        del repo_config
 
         # empty file
         touch(repo_name_path)
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.pms_repo_name == ""
-        del repo_config
 
         # whitespace
         with open(repo_name_path, "w") as f:
             f.write(" \n")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.pms_repo_name == ""
-        del repo_config
 
         # whitespace + name
         with open(repo_name_path, "w") as f:
             f.write(" repo \n")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.pms_repo_name == "repo"
-        del repo_config
 
         # regular name
         with open(repo_name_path, "w") as f:
             f.write("newrepo")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.pms_repo_name == "newrepo"
-        del repo_config
 
         # regular name EOLed
         with open(repo_name_path, "w") as f:
             f.write("newrepo2\n")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.pms_repo_name == "newrepo2"
-        del repo_config
 
         # multi-line
         with open(repo_name_path, "w") as f:
             f.write("newrepo3\nfoobar")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.pms_repo_name == "newrepo3"
-        del repo_config
 
         # binary data
         with open(repo_name_path, "wb") as f:
             f.write(b"\x6e\x65\x77\x72\x65\x70\x6f\x34")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.pms_repo_name == "newrepo4"
-        del repo_config
 
     def test_repo_id(self, caplog):
         # nonexistent repo
         repo_config = repo_objs.RepoConfig("nonexistent")
         assert repo_config.repo_id == "nonexistent"
-        del repo_config
 
         # empty repo
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.repo_id == self.repo_path
         assert caplog.text == ""
         caplog.clear()
-        del repo_config
 
         # nonempty repo
         os.mkdir(self.profiles_base)
@@ -854,14 +815,12 @@ class TestRepoConfig:
         assert repo_config.repo_id == self.repo_path
         assert "repo lacks a defined name:" in caplog.text
         caplog.clear()
-        del repo_config
 
         # pms repo name exists
         with open(os.path.join(self.profiles_base, "repo_name"), "w") as f:
             f.write("pms_name")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.repo_id == "pms_name"
-        del repo_config
 
         # layout.conf repo name exists
         os.mkdir(os.path.dirname(self.metadata_path))
@@ -869,18 +828,15 @@ class TestRepoConfig:
             f.write("repo-name = metadata_name")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.repo_id == "metadata_name"
-        del repo_config
 
         # config name exists
         repo_config = repo_objs.RepoConfig(self.repo_path, config_name="config_name")
         assert repo_config.repo_id == "config_name"
-        del repo_config
 
     def test_known_arches(self):
         # nonexistent repo
         repo_config = repo_objs.RepoConfig("nonexistent")
         assert repo_config.known_arches == frozenset()
-        del repo_config
 
         # empty file
         os.mkdir(self.profiles_base)
@@ -888,14 +844,12 @@ class TestRepoConfig:
         touch(arches_path)
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.known_arches == frozenset()
-        del repo_config
 
         # single entry
         with open(arches_path, "w") as f:
             f.write("foo")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.known_arches == frozenset(["foo"])
-        del repo_config
 
         # multiple entries with whitespaces and comments
         with open(arches_path, "w") as f:
@@ -910,14 +864,12 @@ class TestRepoConfig:
             )
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.known_arches == frozenset(["amd64", "x86", "foo-bar"])
-        del repo_config
 
     def test_arches_desc(self):
         # nonexistent repo
         repo_config = repo_objs.RepoConfig("nonexistent")
         empty = {"stable": set(), "transitional": set(), "testing": set()}
         assert repo_config.arches_desc == ImmutableDict(empty)
-        del repo_config
 
         # empty file
         os.mkdir(self.profiles_base)
@@ -925,7 +877,6 @@ class TestRepoConfig:
         touch(arches_desc_path)
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.arches_desc == ImmutableDict(empty)
-        del repo_config
 
         # regular entries
         with open(os.path.join(self.profiles_base, "arch.list"), "w") as f:
@@ -949,13 +900,11 @@ class TestRepoConfig:
         assert repo_config.arches_desc["stable"] == {"amd64"}
         assert repo_config.arches_desc["testing"] == {"alpha"}
         assert repo_config.arches_desc["transitional"] == set()
-        del repo_config
 
     def test_use_desc(self):
         # nonexistent repo
         repo_config = repo_objs.RepoConfig("nonexistent")
         assert repo_config.use_desc == ()
-        del repo_config
 
         # empty file
         os.mkdir(self.profiles_base)
@@ -963,7 +912,6 @@ class TestRepoConfig:
         touch(use_desc_path)
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.use_desc == ()
-        del repo_config
 
         # regular entries
         with open(use_desc_path, "w") as f:
@@ -979,13 +927,11 @@ class TestRepoConfig:
             )
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert 3 == len(repo_config.use_desc)
-        del repo_config
 
     def test_use_expand_desc(self):
         # nonexistent repo
         repo_config = repo_objs.RepoConfig("nonexistent")
         assert repo_config.use_expand_desc == {}
-        del repo_config
 
         # empty file
         use_expand_desc_path = os.path.join(self.profiles_base, "desc")
@@ -994,7 +940,6 @@ class TestRepoConfig:
         touch(use_expand_desc_file)
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.use_expand_desc == {"foo": ()}
-        del repo_config
 
         # regular entries
         with open(use_expand_desc_file, "w") as f:
@@ -1011,13 +956,11 @@ class TestRepoConfig:
         assert repo_config.use_expand_desc == {
             "foo": (("foo_bar", "add bar support"), ("foo_baz", "build using baz"))
         }
-        del repo_config
 
     def test_use_local_desc(self):
         # nonexistent repo
         repo_config = repo_objs.RepoConfig("nonexistent")
         assert repo_config.use_local_desc == ()
-        del repo_config
 
         # empty file
         os.mkdir(self.profiles_base)
@@ -1025,7 +968,6 @@ class TestRepoConfig:
         touch(use_local_desc_path)
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.use_local_desc == ()
-        del repo_config
 
         # regular entries
         with open(use_local_desc_path, "w") as f:
@@ -1041,13 +983,11 @@ class TestRepoConfig:
             )
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert 3 == len(repo_config.use_local_desc)
-        del repo_config
 
     def test_updates(self):
         # nonexistent repo
         repo_config = repo_objs.RepoConfig("nonexistent")
         assert repo_config.updates == {}
-        del repo_config
 
         # empty file
         updates_path = os.path.join(self.profiles_base, "updates")
@@ -1056,7 +996,6 @@ class TestRepoConfig:
         touch(updates_file_path)
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.updates == {}
-        del repo_config
 
         # simple pkg move
         # TODO: move pkg_updates content tests to its own module
@@ -1067,7 +1006,6 @@ class TestRepoConfig:
             "cat1/pkg1": [("move", atom.atom("cat1/pkg1"), atom.atom("cat2/pkg1"))],
         }
         assert repo_config.updates == expected_updates
-        del repo_config
 
         # extraneous file should be ignored
         extra_file_path = os.path.join(updates_path, "frobnicate")
@@ -1075,7 +1013,6 @@ class TestRepoConfig:
             f.write("move cat1/pkg2 cat1/pkg3\n")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.updates == expected_updates
-        del repo_config
 
     def test_updates_eapi8(self):
         # empty file
@@ -1087,7 +1024,6 @@ class TestRepoConfig:
             f.write("8\n")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.updates == {}
-        del repo_config
 
         # simple pkg move
         # TODO: move pkg_updates content tests to its own module
@@ -1098,7 +1034,6 @@ class TestRepoConfig:
             "cat1/pkg1": [("move", atom.atom("cat1/pkg1"), atom.atom("cat2/pkg1"))],
         }
         assert repo_config.updates == expected_updates
-        del repo_config
 
         # extraneous file should be ignored
         extra_file_path = os.path.join(updates_path, ".frobnicate")
@@ -1106,4 +1041,3 @@ class TestRepoConfig:
             f.write("move cat1/pkg2 cat1/pkg3\n")
         repo_config = repo_objs.RepoConfig(self.repo_path)
         assert repo_config.updates == expected_updates
-        del repo_config

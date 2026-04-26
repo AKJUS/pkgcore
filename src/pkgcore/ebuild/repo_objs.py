@@ -30,7 +30,6 @@ from typing import NamedTuple
 from lxml import etree
 from snakeoil import klass, mappings
 from snakeoil.bash import BashParseError, read_bash, read_dict
-from snakeoil.caching import WeakInstMeta
 from snakeoil.currying import post_curry
 from snakeoil.fileutils import readfile, readlines
 from snakeoil.klass import immutable
@@ -689,7 +688,7 @@ class OverlayedProfiles(Profiles):
         return frozenset(chain.from_iterable(self._profiles_instances))
 
 
-class RepoConfig(syncable.tree, klass.ImmutableInstance, metaclass=WeakInstMeta):
+class RepoConfig(syncable.tree, klass.ImmutableInstance):
     """Configuration data for an ebuild repository."""
 
     layout_offset = "metadata/layout.conf"
@@ -704,8 +703,6 @@ class RepoConfig(syncable.tree, klass.ImmutableInstance, metaclass=WeakInstMeta)
         "profile-set",
     )
     supported_cache_formats = ("md5-dict", "pms")
-
-    __inst_caching__ = True
 
     pkgcore_config_type = ConfigHint(
         typename="repo_config",

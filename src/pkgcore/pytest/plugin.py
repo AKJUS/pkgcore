@@ -214,9 +214,7 @@ class EbuildRepo:
         # avoid issues loading modules that set signal handlers
         from ..ebuild import repo_objs, repository
 
-        repo_config = repo_objs.RepoConfig(
-            location=self.path, disable_inst_caching=True
-        )
+        repo_config = repo_objs.RepoConfig(location=self.path)
         self._repo = repository.UnconfiguredTree(self.path, repo_config=repo_config)
 
     def create_profiles(self, profiles):
