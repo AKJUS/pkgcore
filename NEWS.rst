@@ -21,6 +21,10 @@ Internal Changes
   performance reason for doing so, and downstream consumption never actually
   used it in a way warranting it.
 
+- ``repo_config.Profiles`` no longer caches instances.  It never had any
+  performance reason for doing so, and downstream consumption never actually
+  used it in a way warranting it.
+
 
 Deprecations
 ~~~~~~~~~~~~

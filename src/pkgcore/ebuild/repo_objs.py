@@ -580,7 +580,6 @@ _KnownProfile = namedtuple(
 
 class Profiles(immutable.Simple):
     __slots__ = ("config", "profiles_base", "_profiles")
-    __inst_caching__ = True
 
     def __init__(self, repo_config, profiles_base=None):
         self.config = repo_config
@@ -673,7 +672,6 @@ class Profiles(immutable.Simple):
 
 
 class OverlayedProfiles(Profiles):
-    __inst_caching__ = True
     __slots__ = ("_profiles_instances", "_profiles_sources")
 
     def __init__(self, *profiles_sources):
