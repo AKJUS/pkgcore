@@ -455,8 +455,7 @@ class LocalProjectsXml(ProjectsXml):
             return mappings.ImmutableDict()
 
 
-class Licenses(immutable.Simple, metaclass=WeakInstMeta):
-    __inst_caching__ = True
+class Licenses(immutable.Simple):
     __slots__ = (
         "_base",
         "_licenses",

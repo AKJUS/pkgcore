@@ -17,6 +17,10 @@ Internal Changes
   No downstream code is affected, however they now have finer grained control over their
   subclass instance caching.
 
+- ``repo_config.Licenses`` no longer caches instances.  It never had any
+  performance reason for doing so, and downstream consumption never actually
+  used it in a way warranting it.
+
 
 Deprecations
 ~~~~~~~~~~~~
