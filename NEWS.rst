@@ -2,6 +2,33 @@
 Release Notes
 =============
 
+-----------------------------
+pkgcore 0.12.34 (unreleased)
+-----------------------------
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
+- The slew of deprecation notices from snakeoil are being reduced and
+  addressed in this release.  Tests will be less noisy.
+
+- The restrictions subsystem now uses ``abc.ABC`` and has migrated to the new
+  snakeoil refactoring of ``caching.WeakInstMeta`` called ``klass.memoize.WeaklyCached``.
+  No downstream code is affected, however they now have finer grained control over their
+  subclass instance caching.
+
+
+Deprecations
+~~~~~~~~~~~~
+
+- ``restrictions.values.ContainmentMatch2`` has been soft deprecated for >10y,
+  and will be fully removed in `0.13`.  Use ``values.ContainmentMatch`` instead,
+  there is no difference.
+
+Packaging
+~~~~~~~~~~
+
+- ``python 3.12`` is now the minimal version supported
 
 -----------------------------
 pkgcore 0.12.33 (2026-02-16)
