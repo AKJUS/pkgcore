@@ -488,7 +488,7 @@ class ContainmentMatch(_HashedGenericEquality, base):
         return f"{negate}{restricts_str}"
 
 
-ContainmentMatch2 = deprecated("use ContainmentMatch instead", removal_in=(0, 12, 0))(
+ContainmentMatch2 = deprecated("use ContainmentMatch instead", removal_in=(0, 13, 0))(
     ContainmentMatch
 )
 
