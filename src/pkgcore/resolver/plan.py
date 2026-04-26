@@ -549,6 +549,8 @@ class merge_plan:
             self.notify_trying_choice(stack, atom, choices)
 
             if not choices.current_pkg.built or self.process_built_depends:
+                # Is there any value in doing BDEPEND prior to DEPEND, in terms of what it
+                # allows the resolver to do?
                 new_additions, failures = self.process_dependencies_and_blocks(
                     stack, choices, "depend", atom, depth
                 )
@@ -563,6 +565,8 @@ class merge_plan:
                     continue
                 additions += new_additions
 
+            # Process RDEPEND prior to IDEPEND; IDEPEND should be miniscule, but this allows parallelization
+            # of RDEPEND merges before our required IDEPEND merge.
             new_additions, failures = self.process_dependencies_and_blocks(
                 stack, choices, "rdepend", atom, depth
             )
@@ -786,6 +790,13 @@ class merge_plan:
             [],
             [],
         )
+        # TODO: consider restructuring this so what gets recorded is the set of additions, *before*
+        # the blockers, for our top level.
+        # Blocker removal is faster than building if it's a true removal (not upgrade), and it's a critical
+        # section anyways for the dep involved.
+        # Moving additions to *before*- thus moving hard blockers to later- *may* allow the resultant processing
+        # of builds to go more parallel, rather than intermixing potential critical sections into the general
+        # set of things to do.  Emphasis on *may*.
         cur_frame = stack.current_frame
         self.notify_starting_mode(mode, stack)
         for potentials in depset:
