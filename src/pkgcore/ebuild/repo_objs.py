@@ -688,7 +688,7 @@ class OverlayedProfiles(Profiles):
         return frozenset(chain.from_iterable(self._profiles_instances))
 
 
-class RepoConfig(syncable.tree, klass.ImmutableInstance):
+class RepoConfig(syncable.tree, immutable.Simple):
     """Configuration data for an ebuild repository."""
 
     layout_offset = "metadata/layout.conf"
@@ -716,10 +716,10 @@ class RepoConfig(syncable.tree, klass.ImmutableInstance):
         self, location, config_name=None, syncer=None, profiles_base="profiles"
     ):
         super().__init__(syncer)
-        object.__setattr__(self, "config_name", config_name)
-        object.__setattr__(self, "external", (config_name is None))
-        object.__setattr__(self, "location", location)
-        object.__setattr__(self, "profiles_base", pjoin(location, profiles_base))
+        self.config_name = config_name
+        self.external = config_name is None
+        self.location = location
+        self.profiles_base = pjoin(location, profiles_base)
 
         try:
             self._parse_config()
@@ -729,6 +729,7 @@ class RepoConfig(syncable.tree, klass.ImmutableInstance):
         if not self.eapi.supported:
             raise repo_errors.UnsupportedRepo(self)
 
+    @immutable.Simple.__allow_mutation_wrapper__
     def _parse_config(self):
         """Load data from the repo's metadata/layout.conf file."""
         path = pjoin(self.location, self.layout_offset)
@@ -740,8 +741,7 @@ class RepoConfig(syncable.tree, klass.ImmutableInstance):
             ignore_errors=True,
         )
 
-        sf = object.__setattr__
-        sf(self, "repo_name", data.get("repo-name", None))
+        self.repo_name = data.get("repo-name", None)
 
         hashes = data.get("manifest-hashes", "").lower().split()
         if hashes:
@@ -767,7 +767,7 @@ class RepoConfig(syncable.tree, klass.ImmutableInstance):
             "required_hashes": required_hashes,
         }
 
-        sf(self, "manifests", _immutable_attr_dict(d))
+        self.manifests = _immutable_attr_dict(d)
         masters = data.get("masters")
         _missing_masters = False
         if masters is None:
@@ -781,51 +781,37 @@ class RepoConfig(syncable.tree, klass.ImmutableInstance):
             masters = ()
         else:
             masters = tuple(unique_stable(masters.split()))
-        sf(self, "_missing_masters", _missing_masters)
-        sf(self, "masters", masters)
+        self._missing_masters = _missing_masters
+        self.masters = masters
         aliases = data.get("aliases", "").split() + [
             self.config_name,
             self.repo_name,
             self.pms_repo_name,
             self.location,
         ]
-        sf(self, "aliases", tuple(filter(None, unique_stable(aliases))))
-        sf(
-            self,
-            "eapis_deprecated",
+        self.aliases = tuple(filter(None, unique_stable(aliases)))
+        self.eapis_deprecated = (
             tuple(unique_stable(data.get("eapis-deprecated", "").split())),
         )
-        sf(
-            self,
-            "eapis_banned",
+        self.eapis_banned = (
             tuple(unique_stable(data.get("eapis-banned", "").split())),
         )
-        sf(
-            self,
-            "eapis_testing",
+        self.eapis_testing = (
             tuple(unique_stable(data.get("eapis-testing", "").split())),
         )
-        sf(
-            self,
-            "profile_eapis_deprecated",
+        self.profile_eapis_deprecated = (
             tuple(unique_stable(data.get("profile-eapis-deprecated", "").split())),
         )
-        sf(
-            self,
-            "profile_eapis_banned",
+        self.profile_eapis_banned = (
             tuple(unique_stable(data.get("profile-eapis-banned", "").split())),
         )
-        sf(
-            self,
-            "properties_allowed",
+        self.properties_allowed = (
             tuple(unique_stable(data.get("properties-allowed", "").split())),
         )
-        sf(
-            self,
-            "restrict_allowed",
+        self.restrict_allowed = (
             tuple(unique_stable(data.get("restrict-allowed", "").split())),
         )
-        sf(self, "sign_commits", data.get("sign-commits", "false").lower() == "true")
+        self.sign_commits = data.get("sign-commits", "false".lower() == "true")
 
         v = set(data.get("cache-formats", "md5-dict").lower().split())
         if not v:
@@ -836,7 +822,7 @@ class RepoConfig(syncable.tree, klass.ImmutableInstance):
             if not v:
                 logger.warning("unknown cache format: falling back to md5-dict format")
                 v = ["md5-dict"]
-        sf(self, "cache_format", list(v)[0])
+        self.cache_format = list(v)[0]
 
         profile_formats = set(data.get("profile-formats", "pms").lower().split())
         if not profile_formats:
@@ -856,7 +842,7 @@ class RepoConfig(syncable.tree, klass.ImmutableInstance):
             )
             profile_formats.difference_update(unknown)
             profile_formats.add("pms")
-        sf(self, "profile_formats", profile_formats)
+        self.profile_formats = profile_formats
 
     @klass.jit_attr
     def known_arches(self):
@@ -1083,8 +1069,8 @@ class SquashfsRepoConfig(RepoConfig):
 
     def __init__(self, sqfs_file, location, *args, **kwargs):
         sqfs_path = pjoin(location, sqfs_file)
-        object.__setattr__(self, "_sqfs", sqfs_path)
-        object.__setattr__(self, "location", location)
+        self._sqfs = sqfs_path
+        self.location = location
         # if squashfs archive exists in the repo, try to mount it over itself
         if os.path.exists(self._sqfs):
             try:
